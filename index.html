@@ -135,11 +135,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .ci{display:flex;gap:9px;align-items:flex-start;padding:10px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;margin-bottom:5px;transition:all .15s;box-shadow:var(--sh)}
 .ci:hover{border-color:var(--border2)}
 .ci.on{background:var(--gbg);border-color:var(--gbr)}
-.ci.on .ci-t{color:var(--text3);text-decoration:line-through;text-decoration-color:var(--gbr)}
 .ci-box{width:17px;min-width:17px;height:17px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px;flex-shrink:0}
 .ci.on .ci-box{background:var(--green);border-color:var(--green)}
 .ci-cat{font-size:9px;font-weight:600;padding:2px 7px;border-radius:3px;flex-shrink:0;margin-top:2px;letter-spacing:.04em;border:1px solid}
-.ci-t{font-size:12px;color:var(--text);flex:1;line-height:1.5}
+.ci-txt{font-size:12px;color:var(--text);flex:1;line-height:1.5}
+.ci.on .ci-txt{color:var(--text3)}
+.ci-time{font-size:10px;color:var(--green);font-weight:500;white-space:nowrap;flex-shrink:0;margin-top:2px;opacity:.85}
 .cl-act{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 .cl-msg{font-size:12px;font-weight:600;color:var(--green)}
 .cl-sv{font-size:11px;color:var(--text3);margin-left:auto}
@@ -234,8 +235,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .ubadge-enz{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
 .ubadge-abd{background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe}
 .ubadge-guest{background:var(--bg3);color:var(--text3);border-color:var(--border2)}
-.logout-btn{font-size:11px;color:var(--text3);cursor:pointer;padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:none;font-family:'Inter',sans-serif}
-.logout-btn:hover{background:var(--bg3);color:var(--text)}
+.logout-btn{font-size:11px;font-weight:600;color:var(--red);cursor:pointer;padding:5px 12px;border-radius:6px;border:1px solid var(--rbr);background:var(--rbg);font-family:'Inter',sans-serif;transition:all .15s}
+.logout-btn:hover{background:var(--rbr);color:var(--red)}
 /* readonly overlay on checklist */
 .cl-readonly-banner{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px}
 .cl-unlock-btn{font-size:11px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif;margin-left:auto}
@@ -292,7 +293,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
     </div>
     <div id="user-badge">
       <span id="ubadge-label" class="ubadge"></span>
-      <button class="logout-btn" onclick="doLogout()">Switch</button>
+      <button class="logout-btn" onclick="doLogout()">Log out</button>
     </div>
   </div>
 </div>
@@ -1210,9 +1211,16 @@ function finishLogin(who) {
 function doLogout() {
   CURRENT_USER = null;
   LOGIN_TARGET = null;
+  // Reset nav back to Edge System tab
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('on'); });
+  document.querySelectorAll('.ntab').forEach(function(t) { t.classList.remove('on'); });
+  document.getElementById('pg-edge').classList.add('on');
+  document.querySelector('.ntab').classList.add('on');
+  // Show login screen
   document.getElementById('login-overlay').style.display = 'flex';
   document.getElementById('login-pw-section').style.display = 'none';
   document.getElementById('login-pw-err').textContent = '';
+  document.getElementById('login-pw-input').value = '';
   document.getElementById('user-badge').style.display = 'none';
 }
 
@@ -1321,17 +1329,20 @@ var CATS = {
 
 function cc(cat) { var v=(CATS[cat]||CATS.Custom).split(':'); return {c:v[0],bg:v[1],br:v[2]}; }
 
-var MEM = { enz: { items: null, checked: {} }, abd: { items: null, checked: {} } };
+var MEM = { enz: { items: null, checked: {}, timestamps: {}, last_reset: null }, abd: { items: null, checked: {}, timestamps: {}, last_reset: null } };
 var EDIT_STATE = { enz: false, abd: false };
 
 function getItems(w) { return MEM[w].items || JSON.parse(JSON.stringify(DEFAULT)); }
 function getState(w) { return MEM[w].checked || {}; }
+function getTimestamps(w) { return MEM[w].timestamps || {}; }
 
 async function saveToSupabase(w) {
   await sbPost('/rest/v1/checklists', {
     user_id: w,
     items: MEM[w].items,
     checked: MEM[w].checked,
+    timestamps: MEM[w].timestamps,
+    last_reset: MEM[w].last_reset,
     updated_at: new Date().toISOString()
   });
 }
@@ -1341,9 +1352,29 @@ async function loadFromSupabase(w) {
   if (data && data[0] && data[0].items) {
     MEM[w].items = data[0].items;
     MEM[w].checked = data[0].checked || {};
+    MEM[w].timestamps = data[0].timestamps || {};
+    MEM[w].last_reset = data[0].last_reset || null;
+    // Auto-reset if last check was more than 24h ago
+    var ts = MEM[w].timestamps;
+    var checked = MEM[w].checked;
+    var hasAnyChecked = Object.values(checked).some(Boolean);
+    if (hasAnyChecked) {
+      var latest = Object.values(ts).filter(Boolean).sort().pop();
+      if (latest) {
+        var age = Date.now() - new Date(latest).getTime();
+        if (age > 24 * 60 * 60 * 1000) {
+          MEM[w].checked = {};
+          MEM[w].timestamps = {};
+          MEM[w].last_reset = new Date().toISOString();
+          saveToSupabase(w);
+        }
+      }
+    }
   } else {
     MEM[w].items = JSON.parse(JSON.stringify(DEFAULT));
     MEM[w].checked = {};
+    MEM[w].timestamps = {};
+    MEM[w].last_reset = null;
   }
 }
 
@@ -1357,6 +1388,7 @@ function chkSVG() {
 function renderCL(w) {
   var items = getItems(w);
   var state = getState(w);
+  var timestamps = getTimestamps(w);
   var editable = canEdit(w);
   var edit = EDIT_STATE[w] && editable;
   var done = items.filter(function(_, i) { return !!state[i]; }).length;
@@ -1365,6 +1397,13 @@ function renderCL(w) {
   var pcol = pct < 50 ? 'var(--red)' : pct < 85 ? 'var(--amber)' : 'var(--green)';
   var lbl = w === 'enz' ? 'Enz' : 'Abdullah';
   var dcol = w === 'enz' ? '#2563eb' : '#7c3aed';
+
+  // Last reset info
+  var lastResetStr = '';
+  if (MEM[w].last_reset) {
+    var lr = new Date(MEM[w].last_reset);
+    lastResetStr = 'Last reset: ' + lr.toLocaleDateString('en-GB', {day:'numeric',month:'short'}) + ' at ' + lr.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+  }
 
   var grps = {};
   items.forEach(function(item, i) {
@@ -1386,11 +1425,20 @@ function renderCL(w) {
           clickAttr = 'onclick="showUnlockPrompt(\'' + w + '\')"';
         }
       }
+      // Format timestamp
+      var timeStr = '';
+      if (on && timestamps[item.i]) {
+        var d = new Date(timestamps[item.i]);
+        var dateStr = d.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+        var timeOnly = d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+        timeStr = '<span class="ci-time">' + dateStr + ' ' + timeOnly + '</span>';
+      }
       var delBtn = edit ? '<button class="xbtn" onclick="delItem(\'' + w + '\',' + item.i + ')" title="Remove">x</button>' : '';
       return '<div class="ci ' + (on ? 'on' : '') + '" id="' + w + '-r' + item.i + '" ' + clickAttr + '>' +
         '<div class="ci-box" id="' + w + '-b' + item.i + '">' + (on ? chkSVG() : '') + '</div>' +
         '<span class="ci-cat" style="background:' + k.bg + ';color:' + k.c + ';border-color:' + k.br + '">' + item.s + '</span>' +
         '<span class="ci-txt">' + item.t + '</span>' +
+        timeStr +
         delBtn +
         '</div>';
     }).join('');
@@ -1434,7 +1482,7 @@ function renderCL(w) {
       '<div>' +
         '<div class="cln" style="color:' + dcol + '">' + lbl + ' · Personal Checklist</div>' +
         '<div class="clh-t">Pre-Trade Checklist</div>' +
-        '<div class="clh-s">' + (editable ? 'Run every item before entering. Progress syncs via Supabase.' : 'Viewing ' + lbl + "'s checklist — read only.") + '</div>' +
+        '<div class="clh-s">' + (editable ? 'Resets automatically after 24h. ' + (lastResetStr || 'Never manually reset.') : 'Viewing ' + lbl + "'s checklist — read only.") + '</div>' +
       '</div>' +
       '<div class="cl-right">' +
         '<div class="cl-pct" style="color:' + pcol + '">' + pct + '%</div>' +
@@ -1451,13 +1499,27 @@ function renderCL(w) {
 
 function tog(w, i) {
   var state = getState(w);
+  var timestamps = getTimestamps(w);
   state[i] = !state[i];
+  if (state[i]) {
+    timestamps[i] = new Date().toISOString();
+  } else {
+    delete timestamps[i];
+  }
   MEM[w].checked = state;
+  MEM[w].timestamps = timestamps;
   saveToSupabase(w);
   renderCL(w);
 }
 
-function resetCL(w) { MEM[w].checked = {}; saveToSupabase(w); renderCL(w); toast('Checklist reset'); }
+function resetCL(w) {
+  MEM[w].checked = {};
+  MEM[w].timestamps = {};
+  MEM[w].last_reset = new Date().toISOString();
+  saveToSupabase(w);
+  renderCL(w);
+  toast('Checklist reset');
+}
 
 function checkAll(w) {
   var items = getItems(w);
@@ -1524,27 +1586,36 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function fmtDT(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  return d.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short',year:'numeric'}) +
+    ' at ' + d.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+}
+
 function renderNotes() {
   var list = document.getElementById('notes-list');
   if (!list) return;
   var filtered = NOTES_FILTER === 'all' ? NOTES : NOTES.filter(function(n) { return n.category === NOTES_FILTER; });
   if (!filtered.length) {
     list.innerHTML = '<div style="padding:56px;text-align:center;color:var(--text3);font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:10px">' +
-      (NOTES_FILTER === 'all' ? 'No notes yet — add your first one above.' : 'No entries in this category yet.') + '</div>';
+      (NOTES_FILTER === 'all' ? 'No notes yet — add the first one above.' : 'No entries in this category yet.') + '</div>';
     return;
   }
+  var canDel = CURRENT_USER && CURRENT_USER !== 'guest';
   list.innerHTML = filtered.map(function(n) {
-    var d = n.created_at ? new Date(n.created_at).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}) : n.date || '';
+    var dt = fmtDT(n.created_at);
+    var whoColor = n.who === 'Enz' ? '#1d4ed8' : n.who === 'Abdullah' ? '#6d28d9' : 'var(--teal)';
+    var whoBg = n.who === 'Enz' ? '#eff6ff' : n.who === 'Abdullah' ? '#f5f3ff' : 'var(--tbg)';
+    var whoBr = n.who === 'Enz' ? '#bfdbfe' : n.who === 'Abdullah' ? '#ddd6fe' : 'var(--tbr)';
     return '<div class="note-card">' +
       '<div class="note-card-top">' +
         '<span class="ncat-pill ncat-' + n.category + '">' + (CAT_EMOJI[n.category] || '') + ' ' + n.category + '</span>' +
-        (n.who ? '<span class="nwho-pill">' + n.who + '</span>' : '') +
+        (n.who ? '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:3px;background:' + whoBg + ';color:' + whoColor + ';border:1px solid ' + whoBr + '">' + n.who + '</span>' : '') +
+        '<span style="font-size:10px;color:var(--text3);margin-left:auto">' + dt + '</span>' +
       '</div>' +
       '<div class="note-card-body">' + esc(n.body) + '</div>' +
-      '<div class="note-card-footer">' +
-        '<span class="note-card-meta">' + d + '</span>' +
-        '<button class="note-del" onclick="confirmDel(\'' + n.id + '\')">Delete</button>' +
-      '</div>' +
+      (canDel ? '<div class="note-card-footer"><button class="note-del" onclick="confirmDel(\'' + n.id + '\')">Delete</button></div>' : '') +
     '</div>';
   }).join('');
 }
@@ -1552,9 +1623,13 @@ function renderNotes() {
 async function addNote() {
   var body = document.getElementById('note-text').value.trim();
   if (!body) { toast('Write something first', 'r'); return; }
+  // Auto-fill who based on logged in user
+  var whoEl = document.getElementById('note-who');
+  if (CURRENT_USER === 'enz') whoEl.value = 'Enz';
+  else if (CURRENT_USER === 'abd') whoEl.value = 'Abdullah';
   var note = {
     category: document.getElementById('note-cat').value,
-    who: document.getElementById('note-who').value,
+    who: whoEl.value,
     body: body,
     date: document.getElementById('note-date').value,
     created_at: new Date().toISOString()
@@ -1565,7 +1640,7 @@ async function addNote() {
   renderNotes();
   document.getElementById('note-text').value = '';
   document.getElementById('note-saving').textContent = '';
-  toast('Note saved', 'g');
+  toast('Note saved — visible to everyone', 'g');
 }
 
 async function confirmDel(id) {
@@ -1614,7 +1689,7 @@ var CONF_STATE = {};
 var PREP_HISTORY = [];
 
 async function loadPrep() {
-  var data = await sbFetch('/rest/v1/daily_prep?order=date.desc&limit=5');
+  var data = await sbFetch('/rest/v1/daily_prep?order=date.desc&limit=10');
   if (!Array.isArray(data)) { PREP_HISTORY = []; return; }
   PREP_HISTORY = data;
   var today = new Date().toISOString().split('T')[0];
@@ -1637,15 +1712,16 @@ async function loadPrep() {
 
 async function savePrep() {
   var today = new Date().toISOString().split('T')[0];
+  var now = new Date().toISOString();
   function getVal(id) { var el = document.getElementById(id); return el ? el.value : ''; }
   var levels = { vah:getVal('pl-vah'), res2:getVal('pl-res2'), poc:getVal('pl-poc'), pivot2:getVal('pl-pivot2'), val:getVal('pl-val'), sup2:getVal('pl-sup2'), lvn:getVal('pl-lvn') };
   var statusEl = document.getElementById('prep-sync-status');
   if (statusEl) statusEl.textContent = 'Saving...';
-  await sbPost('/rest/v1/daily_prep', { date:today, fields:PREP, levels:levels, rules_state:PREP_RULES_STATE, conf_state:CONF_STATE, plan:getVal('prep-plan') });
+  await sbPost('/rest/v1/daily_prep', { date:today, saved_at:now, saved_by:(CURRENT_USER==='enz'?'Enz':CURRENT_USER==='abd'?'Abdullah':'Guest'), fields:PREP, levels:levels, rules_state:PREP_RULES_STATE, conf_state:CONF_STATE, plan:getVal('prep-plan') });
   if (statusEl) { statusEl.textContent = 'Saved'; setTimeout(function() { statusEl.textContent=''; }, 2000); }
   await loadPrep();
   renderPrepHistory();
-  toast('Prep saved', 'g');
+  toast('Prep saved — visible to everyone', 'g');
 }
 
 function clearPrep() {
@@ -1740,22 +1816,53 @@ function toggleConf(i) {
 function renderPrepHistory() {
   var el = document.getElementById('prep-history');
   if (!el) return;
-  if (!PREP_HISTORY.length) { el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:12px 0">No previous sessions yet.</div>'; return; }
+  if (!PREP_HISTORY.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:24px;text-align:center;background:var(--bg3);border-radius:8px">No sessions saved yet.</div>';
+    return;
+  }
   el.innerHTML = PREP_HISTORY.map(function(row) {
     var f = row.fields || {};
+    var lv = row.levels || {};
     var biasOk = f.vwap && f.vwap === f.psvp;
-    var biasText = biasOk ? f.vwap : (f.vwap ? 'Conflict' : '');
+    var biasText = biasOk ? f.vwap : (f.vwap ? 'Conflict' : '—');
     var bBg = biasOk ? (f.vwap==='Long'?'var(--gbg)':'var(--rbg)') : 'var(--abg)';
     var bCol = biasOk ? (f.vwap==='Long'?'var(--green)':'var(--red)') : 'var(--amber)';
     var bBr = biasOk ? (f.vwap==='Long'?'var(--gbr)':'var(--rbr)') : 'var(--abr)';
-    return '<div class="hist-row">' +
-      '<span class="hist-date">' + (row.date||'') + '</span>' +
-      (f.session ? '<span class="hist-tag" style="background:var(--tbg);color:var(--teal);border-color:var(--tbr)">' + f.session + '</span>' : '') +
-      (f.instrument ? '<span class="hist-tag" style="background:var(--pbg);color:var(--purple);border-color:var(--pbr)">' + f.instrument + '</span>' : '') +
-      (biasText ? '<span class="hist-tag" style="background:' + bBg + ';color:' + bCol + ';border-color:' + bBr + '">' + biasText + '</span>' : '') +
-      (f.model ? '<span class="hist-tag" style="background:var(--bbg);color:var(--blue);border-color:var(--bbr)">' + f.model + '</span>' : '') +
-      (f.approach ? '<span class="hist-tag" style="background:var(--bg3);color:var(--text2);border-color:var(--border2)">' + f.approach + '</span>' : '') +
-      '</div>';
+    var savedAt = row.saved_at ? fmtDT(row.saved_at) : (row.date || '');
+    var savedBy = row.saved_by || '';
+    var confScore = row.conf_state ? Object.values(row.conf_state).filter(Boolean).length : 0;
+    var confVerdict = confScore <= 3 ? 'Skip' : confScore <= 6 ? 'Take' : 'Best setup';
+    var confCol = confScore <= 3 ? 'var(--red)' : confScore <= 6 ? 'var(--amber)' : 'var(--green)';
+    var confBg = confScore <= 3 ? 'var(--rbg)' : confScore <= 6 ? 'var(--abg)' : 'var(--gbg)';
+    var confBr = confScore <= 3 ? 'var(--rbr)' : confScore <= 6 ? 'var(--abr)' : 'var(--gbr)';
+    var levels = '';
+    if (lv.vah || lv.poc || lv.val) {
+      levels = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+        (lv.vah ? '<span style="font-size:11px;color:var(--red);font-weight:600">VAH ' + lv.vah + '</span>' : '') +
+        (lv.poc ? '<span style="font-size:11px;color:var(--amber);font-weight:600">POC ' + lv.poc + '</span>' : '') +
+        (lv.val ? '<span style="font-size:11px;color:var(--green);font-weight:600">VAL ' + lv.val + '</span>' : '') +
+        (lv.lvn ? '<span style="font-size:11px;color:var(--blue);font-weight:600">LVN ' + lv.lvn + '</span>' : '') +
+        '</div>';
+    }
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text)">' + savedAt + '</div>' +
+          (savedBy ? '<div style="font-size:11px;color:var(--text3);margin-top:1px">Saved by ' + savedBy + '</div>' : '') +
+        '</div>' +
+        '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:3px;background:' + confBg + ';color:' + confCol + ';border:1px solid ' + confBr + '">' + confScore + '/11 — ' + confVerdict + '</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">' +
+        (f.session ? '<span class="hist-tag" style="background:var(--tbg);color:var(--teal);border-color:var(--tbr)">' + f.session + '</span>' : '') +
+        (f.instrument ? '<span class="hist-tag" style="background:var(--pbg);color:var(--purple);border-color:var(--pbr)">' + f.instrument + '</span>' : '') +
+        (f.vwap ? '<span class="hist-tag" style="background:' + bBg + ';color:' + bCol + ';border-color:' + bBr + '">' + biasText + '</span>' : '') +
+        (f.model ? '<span class="hist-tag" style="background:var(--bbg);color:var(--blue);border-color:var(--bbr)">' + f.model + '</span>' : '') +
+        (f.approach ? '<span class="hist-tag" style="background:var(--bg3);color:var(--text2);border-color:var(--border2)">' + f.approach + '</span>' : '') +
+        (f.direction ? '<span class="hist-tag" style="background:' + (f.direction==='Long'?'var(--gbg)':f.direction==='Short'?'var(--rbg)':'var(--bg3)') + ';color:' + (f.direction==='Long'?'var(--green)':f.direction==='Short'?'var(--red)':'var(--text2)') + ';border-color:' + (f.direction==='Long'?'var(--gbr)':f.direction==='Short'?'var(--rbr)':'var(--border2)') + '">' + f.direction + '</span>' : '') +
+      '</div>' +
+      levels +
+      (row.plan ? '<div style="font-size:12px;color:var(--text2);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.6">' + esc(row.plan) + '</div>' : '') +
+    '</div>';
   }).join('');
 }
 
