@@ -296,12 +296,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .wlt-Custom,.wlt-Watch{background:var(--bg3);color:var(--text2);border-color:var(--border2)};bottom:22px;right:22px;z-index:9999;font-size:13px;font-weight:500;padding:11px 17px;border-radius:8px;background:var(--text);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15);transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none}
 #toast.on{transform:translateY(0);opacity:1}
 #toast.tg{background:var(--green)}#toast.tr{background:var(--red)}
-
-/* GEX LEVELS */
-.gex-level-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;border:1px solid}
-.gex-level-price{font-family:'Fraunces',serif;font-size:20px;letter-spacing:-.02em}
-.gex-level-desc{font-size:11px;margin-top:2px}
-.gex-level-badge{font-size:9px;font-weight:700;padding:3px 9px;border-radius:4px;white-space:nowrap}
+/* GEX level rows */
+.gex-lv{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;border:1px solid}
+.gex-lv-price{font-family:'Fraunces',serif;font-size:20px;letter-spacing:-.02em;color:var(--text)}
+.gex-lv-desc{font-size:11px;color:var(--text3);margin-top:2px}
+.gex-lv-tag{font-size:9px;font-weight:700;padding:3px 9px;border-radius:4px;white-space:nowrap}
 
 @media(max-width:640px){
   .g2,.g3{grid-template-columns:1fr}
@@ -1302,200 +1301,160 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 <!-- ══════════ GEX INSIGHTS PAGE ══════════ -->
 <div class="page" id="pg-gex">
 
-<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px">
-  <div>
-    <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Options Flow — Live</div>
-    <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--text);letter-spacing:-.02em;margin-bottom:4px">Real-Time GEX Insights</div>
-    <div style="font-size:13px;color:var(--text3)">What dealers are doing — translated into plain English</div>
-  </div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <div id="gex-status-dot" style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text3)">
-      <span style="width:7px;height:7px;border-radius:50%;background:var(--border2);display:inline-block" id="gex-dot"></span>
-      <span id="gex-status-txt">Not connected</span>
-    </div>
-    <button class="btn btn-p" onclick="fetchGEX()" id="gex-refresh-btn">Refresh</button>
-    <button class="btn" onclick="toggleGexAdvanced()" id="gex-adv-btn">Show advanced</button>
-  </div>
-</div>
-
-<!-- Symbol + API key row -->
-<div class="card" style="margin-bottom:16px;padding:16px 20px">
-  <div class="g2" style="gap:20px;align-items:flex-end">
+  <!-- Header row -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
     <div>
-      <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Symbol</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="pbtn" id="gsym-SPY" onclick="setGexSym('SPY')">SPY</button>
-        <button class="pbtn" id="gsym-QQQ" onclick="setGexSym('QQQ')">QQQ</button>
-        <button class="pbtn" id="gsym-ES" onclick="setGexSym('ES')">ES</button>
-        <button class="pbtn" id="gsym-NQ" onclick="setGexSym('NQ')">NQ</button>
-        <input id="gsym-custom" placeholder="Custom…" style="padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg2);outline:none;width:80px" onkeydown="if(event.key==='Enter'){setGexSym(this.value.toUpperCase().trim())}" oninput="if(this.value.length>1)setGexSym(this.value.toUpperCase().trim())"/>
-      </div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Options Flow — Live</div>
+      <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--text);letter-spacing:-.02em;margin-bottom:4px">Real-Time GEX Insights</div>
+      <div style="font-size:13px;color:var(--text3)">What dealers are doing — translated into plain English</div>
     </div>
-    <div style="flex:2">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)">FlashAlpha API Key <a href="https://flashalpha.com" target="_blank" style="color:var(--blue);font-weight:600;text-decoration:none;margin-left:4px;font-size:9px">Get free key →</a></div>
-        <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)">Auto-refresh</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text3)">
+        <span id="gex-dot" style="width:7px;height:7px;border-radius:50%;background:var(--border2);display:inline-block"></span>
+        <span id="gex-status-txt">Not connected</span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="gex-api-key" type="password" placeholder="Paste your FlashAlpha key here…" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg2);outline:none;transition:border .15s" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border2)'"/>
-        <button class="btn btn-p" onclick="connectGex()" style="white-space:nowrap">Connect</button>
-        <select id="gex-interval" style="padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--bg2);color:var(--text);font-family:'Inter',sans-serif;outline:none">
-          <option value="0">Manual</option>
-          <option value="60" selected>1 min</option>
-          <option value="300">5 min</option>
-          <option value="900">15 min</option>
-        </select>
-      </div>
+      <button class="btn btn-p" onclick="fetchGEX()" id="gex-refresh-btn">Refresh</button>
+      <button class="btn" onclick="gexToggleAdv()" id="gex-adv-btn">Show advanced</button>
     </div>
   </div>
-</div>
 
-<!-- What is GEX explainer -->
-<div style="background:var(--bbg);border:1px solid var(--bbr);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start">
-  <span style="font-size:18px;flex-shrink:0">💡</span>
-  <div>
-    <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase">What is GEX?</div>
-    <div style="font-size:13px;color:#1e40af;line-height:1.7">GEX stands for <strong>Gamma Exposure</strong>. Think of it as a map of where big options dealers are <em>forced</em> to buy or sell to stay hedged. When price moves toward a high-GEX level, dealers push back — creating magnets, walls, and flip points. <strong>You don't need to understand options to use this.</strong> Just read the plain-English summary below.</div>
-  </div>
-</div>
-
-<!-- Error banner -->
-<div id="gex-error-banner" style="display:none;background:var(--rbg);border:1px solid var(--rbr);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--red)">
-  <strong id="gex-error-title">Error.</strong> <span id="gex-error-msg"></span>
-</div>
-
-<!-- ── MAIN DATA AREA ── -->
-<div id="gex-data-area" style="display:none">
-
-  <!-- Market Bias card -->
-  <div id="gex-bias-card" style="border-radius:10px;padding:18px 22px;margin-bottom:14px;border:1px solid var(--gbr);background:var(--gbg)">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+  <!-- Symbol + API key setup card -->
+  <div class="card" style="margin-bottom:16px;padding:16px 20px">
+    <div class="g2" style="gap:20px;align-items:flex-end">
       <div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px" id="gex-sym-label">SPY — Market Bias</div>
-        <div style="font-family:'Fraunces',serif;font-size:26px;letter-spacing:-.01em;margin-bottom:5px" id="gex-bias-headline">–</div>
-        <div style="font-size:13px" id="gex-bias-sub">–</div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Symbol</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <button class="pbtn sel" id="gsym-SPY" onclick="gexSetSym('SPY')">SPY</button>
+          <button class="pbtn" id="gsym-QQQ" onclick="gexSetSym('QQQ')">QQQ</button>
+          <button class="pbtn" id="gsym-ES" onclick="gexSetSym('ES')">ES</button>
+          <button class="pbtn" id="gsym-NQ" onclick="gexSetSym('NQ')">NQ</button>
+          <input id="gsym-custom" placeholder="Custom…" onkeydown="if(event.key==='Enter'&&this.value.trim())gexSetSym(this.value.trim().toUpperCase())" style="padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg2);outline:none;width:80px"/>
+        </div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Net GEX</div>
-        <div style="font-family:'Fraunces',serif;font-size:32px;letter-spacing:-.02em" id="gex-net-value">–</div>
-        <div style="font-size:10px;color:var(--text3)">$ billions</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Key Levels + Plain Summary side by side -->
-  <div class="g2" style="margin-bottom:14px;align-items:start">
-
-    <!-- Key Levels -->
-    <div class="card">
-      <div class="lbl" style="margin-bottom:12px">Key Levels — where price will react</div>
-
-      <div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Resistance / Ceiling</div>
-      <div id="gex-resistance-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
-
-      <div style="font-size:10px;font-weight:700;color:var(--amber);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Gamma Flip — Key Battle Zone</div>
-      <div id="gex-flip-card" style="border-radius:8px;padding:12px 14px;background:var(--abg);border:1px solid var(--abr);margin-bottom:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--amber)" id="gex-flip-price">–</div>
-            <div style="font-size:12px;color:#92400e;margin-top:2px">The line that changes everything — above = bullish, below = bearish</div>
+      <div style="flex:2">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)">
+            FlashAlpha API Key
+            <a href="https://flashalpha.com" target="_blank" style="color:var(--blue);font-weight:700;text-decoration:none;font-size:9px;margin-left:6px">GET FREE KEY →</a>
           </div>
-          <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px;background:var(--abg);color:var(--amber);border:1px solid var(--abr)">Flip</span>
+          <div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)">Auto-refresh</div>
         </div>
-      </div>
-
-      <div style="font-size:10px;font-weight:700;color:var(--green);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Support / Floor</div>
-      <div id="gex-support-list" style="display:flex;flex-direction:column;gap:6px"></div>
-    </div>
-
-    <!-- Plain English Summary -->
-    <div class="card">
-      <div class="lbl" style="margin-bottom:12px">Plain-English Summary</div>
-      <div id="gex-summary" style="font-size:13px;color:var(--text2);line-height:1.8">–</div>
-
-      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
-        <div class="lbl" style="margin-bottom:10px">What this means for your trade today</div>
-        <div id="gex-trade-implication" style="display:flex;flex-direction:column;gap:7px"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Advanced view (toggleable) -->
-  <div id="gex-advanced" style="display:none">
-    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Advanced breakdown — for experienced traders</div>
-    <div class="g3" style="margin-bottom:14px">
-      <div class="stat">
-        <div class="stat-l" style="margin-bottom:4px">Call Wall</div>
-        <div class="stat-v" style="color:var(--red)" id="adv-call-wall">–</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">Largest call concentration. Dealers sell here.</div>
-      </div>
-      <div class="stat">
-        <div class="stat-l" style="margin-bottom:4px">Put Wall</div>
-        <div class="stat-v" style="color:var(--green)" id="adv-put-wall">–</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">Largest put concentration. Dealers buy here.</div>
-      </div>
-      <div class="stat">
-        <div class="stat-l" style="margin-bottom:4px">HVL (High Vol Level)</div>
-        <div class="stat-v" style="color:var(--purple)" id="adv-hvl">–</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">Above = pinning tendency. Below = acceleration.</div>
-      </div>
-      <div class="stat">
-        <div class="stat-l" style="margin-bottom:4px">Zero Gamma</div>
-        <div class="stat-v" style="color:var(--amber)" id="adv-zero-gamma">–</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">Dealer positioning flips here. Key pivot.</div>
-      </div>
-      <div class="stat">
-        <div class="stat-l" style="margin-bottom:4px">GEX Regime</div>
-        <div class="stat-v" style="font-size:14px" id="adv-regime">–</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">Positive = dampened. Negative = amplified moves.</div>
-      </div>
-      <div class="stat">
-        <div class="stat-l" style="margin-bottom:4px">Distance to Flip</div>
-        <div class="stat-v" id="adv-dist-flip">–</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px">Points until regime changes. Watch carefully.</div>
-      </div>
-    </div>
-    <div class="card" style="background:var(--bg3)">
-      <div class="lbl" style="margin-bottom:10px">GEX Concepts — plain definitions</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="background:var(--bg2);border-radius:7px;padding:10px 13px;border:1px solid var(--border)">
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px">Gamma Flip</div>
-          <div style="font-size:12px;color:var(--text3);line-height:1.65">The price level where dealers switch from being buyers of dips (supportive) to sellers of rallies (suppressive). <strong>Above the flip = market is cushioned. Below the flip = moves accelerate.</strong></div>
-        </div>
-        <div style="background:var(--bg2);border-radius:7px;padding:10px 13px;border:1px solid var(--border)">
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px">Call Wall</div>
-          <div style="font-size:12px;color:var(--text3);line-height:1.65">The strike with the highest concentration of call options. Dealers are short calls here, so they sell the underlying as price approaches — creating a ceiling effect.</div>
-        </div>
-        <div style="background:var(--bg2);border-radius:7px;padding:10px 13px;border:1px solid var(--border)">
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px">Put Wall</div>
-          <div style="font-size:12px;color:var(--text3);line-height:1.65">The strike with the highest put concentration. Dealers are long puts, so they buy the underlying as price falls toward it — creating a floor effect.</div>
-        </div>
-        <div style="background:var(--bg2);border-radius:7px;padding:10px 13px;border:1px solid var(--border)">
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px">Positive vs Negative GEX Regime</div>
-          <div style="font-size:12px;color:var(--text3);line-height:1.65"><strong>Positive GEX:</strong> Dealers act as shock absorbers — they buy dips and sell rips automatically, dampening volatility and keeping price range-bound.<br/><strong>Negative GEX:</strong> Dealers are forced to follow price — they buy when it goes up and sell when it goes down, amplifying moves and increasing volatility.</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="gex-api-key" type="password" placeholder="Paste your FlashAlpha key here…" style="flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg2);outline:none;transition:border .15s" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border2)'" onkeydown="if(event.key==='Enter')gexConnect()"/>
+          <button class="btn btn-p" onclick="gexConnect()" style="white-space:nowrap">Connect</button>
+          <select id="gex-interval" onchange="gexStartAutoRefresh()" style="padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:var(--bg2);color:var(--text);font-family:'Inter',sans-serif;outline:none">
+            <option value="0">Manual</option>
+            <option value="60" selected>1 min</option>
+            <option value="300">5 min</option>
+            <option value="900">15 min</option>
+          </select>
         </div>
       </div>
     </div>
   </div>
 
-  <div style="font-size:10px;color:var(--text3);margin-top:14px;text-align:right" id="gex-last-updated">–</div>
-</div><!-- end gex-data-area -->
-
-<!-- Empty state when not yet loaded -->
-<div id="gex-empty-state" style="text-align:center;padding:56px 24px;background:var(--bg2);border:1px solid var(--border);border-radius:10px">
-  <div style="font-size:32px;margin-bottom:12px">📊</div>
-  <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Connect to see live GEX data</div>
-  <div style="font-size:13px;color:var(--text3);max-width:420px;margin:0 auto;line-height:1.7">Paste your <strong>FlashAlpha API key</strong> above and click Connect. Don't have one? <a href="https://flashalpha.com" target="_blank" style="color:var(--blue)">Get a free key at flashalpha.com →</a></div>
-  <div style="margin-top:20px;padding:14px 18px;background:var(--abg);border:1px solid var(--abr);border-radius:8px;display:inline-block;text-align:left;max-width:420px">
-    <div style="font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">⚠ Why my key might not work</div>
-    <div style="font-size:12px;color:#92400e;line-height:1.7">
-      1. You need the <strong>full key with no spaces</strong> — copy it directly from your FlashAlpha dashboard.<br/>
-      2. FlashAlpha's free tier may block direct browser requests due to <strong>CORS restrictions</strong>. If you keep getting errors, you may need a paid plan or use their official app.<br/>
-      3. Make sure your key hasn't expired — log in to flashalpha.com to verify it's still active.
+  <!-- What is GEX explainer -->
+  <div style="background:var(--bbg);border:1px solid var(--bbr);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start">
+    <span style="font-size:20px;flex-shrink:0;line-height:1.4">💡</span>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--blue);margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase">What is GEX?</div>
+      <div style="font-size:13px;color:#1e40af;line-height:1.75">GEX stands for <strong>Gamma Exposure</strong>. Think of it as a map of where big options dealers are <em>forced</em> to buy or sell to stay hedged. When price moves toward a high-GEX level, dealers push back — creating magnets, walls, and flip points. <strong>You don't need to understand options to use this.</strong> Just read the plain-English summary below.</div>
     </div>
   </div>
-</div>
+
+  <!-- Error banner -->
+  <div id="gex-err" style="display:none;background:var(--rbg);border:1px solid var(--rbr);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:var(--red);line-height:1.65">
+    <strong id="gex-err-title"></strong> <span id="gex-err-msg"></span>
+  </div>
+
+  <!-- Data area — hidden until connected -->
+  <div id="gex-data" style="display:none">
+
+    <!-- Bias card -->
+    <div id="gex-bias-card" style="border-radius:10px;padding:18px 22px;margin-bottom:14px;border:1px solid var(--gbr);background:var(--gbg)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;color:var(--text3)" id="gex-sym-label">SPY — Market Bias</div>
+          <div style="font-family:'Fraunces',serif;font-size:26px;letter-spacing:-.01em;margin-bottom:6px" id="gex-bias-headline">–</div>
+          <div style="font-size:13px" id="gex-bias-sub">–</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Net GEX</div>
+          <div style="font-family:'Fraunces',serif;font-size:32px;letter-spacing:-.02em" id="gex-net-val">–</div>
+          <div style="font-size:10px;color:var(--text3)">$ billions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key levels + Summary -->
+    <div class="g2" style="margin-bottom:14px;align-items:start">
+      <div class="card">
+        <div class="lbl" style="margin-bottom:12px">Key Levels — where price will react</div>
+        <div style="font-size:10px;font-weight:700;color:var(--red);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Resistance / Ceiling</div>
+        <div id="gex-res-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+        <div style="font-size:10px;font-weight:700;color:var(--amber);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Gamma Flip — Key Battle Zone</div>
+        <div id="gex-flip-row" style="border-radius:8px;padding:12px 14px;background:var(--abg);border:1px solid var(--abr);margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-family:'Fraunces',serif;font-size:22px;color:var(--amber)" id="gex-flip-price">–</div>
+              <div style="font-size:12px;color:#92400e;margin-top:2px">The line that changes everything — above = bullish, below = bearish</div>
+            </div>
+            <span style="font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:var(--abg);color:var(--amber);border:1px solid var(--abr)">Flip</span>
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Support / Floor</div>
+        <div id="gex-sup-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <div class="card">
+        <div class="lbl" style="margin-bottom:12px">Plain-English Summary</div>
+        <div id="gex-summary" style="font-size:13px;color:var(--text2);line-height:1.8">–</div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <div class="lbl" style="margin-bottom:10px">What this means for your trade today</div>
+          <div id="gex-implications" style="display:flex;flex-direction:column;gap:7px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced (toggle) -->
+    <div id="gex-adv" style="display:none">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Advanced breakdown</div>
+      <div class="g3" style="margin-bottom:14px">
+        <div class="stat"><div class="stat-l" style="margin-bottom:4px">Call Wall</div><div class="stat-v" style="color:var(--red)" id="adv-cwall">–</div><div style="font-size:10px;color:var(--text3);margin-top:3px">Strongest ceiling — dealers sell here</div></div>
+        <div class="stat"><div class="stat-l" style="margin-bottom:4px">Put Wall</div><div class="stat-v" style="color:var(--green)" id="adv-pwall">–</div><div style="font-size:10px;color:var(--text3);margin-top:3px">Strongest floor — dealers buy here</div></div>
+        <div class="stat"><div class="stat-l" style="margin-bottom:4px">Gamma Flip</div><div class="stat-v" style="color:var(--amber)" id="adv-flip">–</div><div style="font-size:10px;color:var(--text3);margin-top:3px">Above = dampened. Below = amplified.</div></div>
+        <div class="stat"><div class="stat-l" style="margin-bottom:4px">Underlying Price</div><div class="stat-v" id="adv-price">–</div><div style="font-size:10px;color:var(--text3);margin-top:3px">Current spot price</div></div>
+        <div class="stat"><div class="stat-l" style="margin-bottom:4px">GEX Regime</div><div class="stat-v" style="font-size:14px" id="adv-regime">–</div><div style="font-size:10px;color:var(--text3);margin-top:3px">Positive = stable. Negative = volatile.</div></div>
+        <div class="stat"><div class="stat-l" style="margin-bottom:4px">Distance to Flip</div><div class="stat-v" id="adv-dist">–</div><div style="font-size:10px;color:var(--text3);margin-top:3px">Points until regime changes</div></div>
+      </div>
+      <div class="card" style="background:var(--bg3)">
+        <div class="lbl" style="margin-bottom:10px">GEX Concepts — plain definitions</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:var(--bg2);border-radius:7px;padding:10px 13px;border:1px solid var(--border)"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Gamma Flip</div><div style="font-size:12px;color:var(--text3);line-height:1.65">The price where dealers switch from buying dips (supportive) to selling rallies (suppressive). <strong>Above the flip = cushioned market. Below the flip = moves accelerate.</strong></div></div>
+          <div style="background:var(--bg2);border-radius:7px;padding:10px 13px;border:1px solid var(--border)"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Call Wall</div><div style="font-size:12px;color:var(--text3);line-height:1.65">The strike with the most call options. Dealers are short calls here so they sell the underlying as price approaches — creating a ceiling.</div></div>
+          <div style="background:var(--bg2);border-radius:7px;padding:10px 13px;border:1px solid var(--border)"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Put Wall</div><div style="font-size:12px;color:var(--text3);line-height:1.65">The strike with the most put options. Dealers are long puts so they buy the underlying as price falls — creating a floor.</div></div>
+          <div style="background:var(--bg2);border-radius:7px;padding:10px 13px;border:1px solid var(--border)"><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Positive vs Negative GEX</div><div style="font-size:12px;color:var(--text3);line-height:1.65"><strong>Positive:</strong> Dealers buy dips + sell rips automatically → dampens volatility, range-bound market.<br/><strong>Negative:</strong> Dealers follow price → amplifies moves, trending/volatile market.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:10px;color:var(--text3);margin-top:14px;text-align:right" id="gex-updated">–</div>
+  </div>
+
+  <!-- Empty state (shown until first connect) -->
+  <div id="gex-empty" style="text-align:center;padding:56px 24px;background:var(--bg2);border:1px solid var(--border);border-radius:10px">
+    <div style="font-size:32px;margin-bottom:12px">📊</div>
+    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Connect to see live GEX data</div>
+    <div style="font-size:13px;color:var(--text3);max-width:420px;margin:0 auto 20px;line-height:1.7">Paste your <strong>FlashAlpha API key</strong> above and click Connect.<br/>Don't have one? <a href="https://flashalpha.com" target="_blank" style="color:var(--blue);font-weight:600">Get a free key at flashalpha.com →</a></div>
+    <div style="padding:14px 18px;background:var(--abg);border:1px solid var(--abr);border-radius:8px;display:inline-block;text-align:left;max-width:460px">
+      <div style="font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">⚠ Why my key might not work</div>
+      <div style="font-size:12px;color:#92400e;line-height:1.8">
+        <strong>1. Wrong key format</strong> — copy the full key directly from your FlashAlpha dashboard. No spaces, no extra characters.<br/>
+        <strong>2. Free tier limit</strong> — you only get 5 requests/day on the free plan. If you've hit the limit, wait until tomorrow.<br/>
+        <strong>3. CORS blocked</strong> — some browsers block direct API calls. The fix: try a different browser (Chrome works best), or disable extensions like uBlock Origin.<br/>
+        <strong>4. Market is closed</strong> — FlashAlpha returns live data only during US market hours (9:30am–4pm ET). Outside those hours you may get an error.
+      </div>
+    </div>
+  </div>
 
 </div><!-- end gex page -->
 
@@ -1614,7 +1573,7 @@ function go(id, el) {
   if (id === 'notes') renderNotes();
   if (id === 'prep') initPrepPage();
   if (id === 'watch') initWatchPage();
-  if (id === 'gex') initGexPage();
+  if (id === 'gex') gexInit();
 }
 
 function mdl(i) {
@@ -2597,331 +2556,356 @@ function showNotification(title, sub) {
 }
 
 /* ══════════════════════════════════════════
-   GEX INSIGHTS
-   Uses FlashAlpha API via a CORS proxy to bypass browser restrictions.
-   FlashAlpha's free-tier direct API blocks browser requests (CORS).
-   We route through allorigins.win proxy which is free + public.
+   GEX INSIGHTS — FlashAlpha API
+   Correct endpoint: https://lab.flashalpha.com/v1/exposure/gex/{SYMBOL}
+   Correct auth:     X-Api-Key header (NOT query param, NOT apikey header)
+   Response fields:  net_gex, gamma_flip, net_gex_label, underlying_price,
+                     call_wall.strike, put_wall.strike, strikes[]
+   Free tier:        5 requests/day — only during US market hours
 ══════════════════════════════════════════ */
 var GEX_SYM = 'SPY';
 var GEX_KEY = '';
-var GEX_INTERVAL_ID = null;
-var GEX_ADVANCED_OPEN = false;
+var GEX_ADV = false;
+var GEX_TIMER = null;
 var GEX_DATA = null;
 
-// CORS proxy — needed because FlashAlpha blocks direct browser calls
-var CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-var FA_BASE = 'https://api.flashalpha.com';
-
-function setGexSym(sym) {
-  if (!sym || sym.length < 1) return;
-  GEX_SYM = sym.toUpperCase();
-  // Update button styles
-  ['SPY','QQQ','ES','NQ'].forEach(function(s) {
-    var btn = document.getElementById('gsym-' + s);
-    if (btn) btn.classList.toggle('sel', s === GEX_SYM);
-  });
-  var lbl = document.getElementById('gex-sym-label');
-  if (lbl) lbl.textContent = GEX_SYM + ' — Market Bias';
-  // Auto-refresh if connected
-  if (GEX_KEY) fetchGEX();
-}
-
-function connectGex() {
-  var inp = document.getElementById('gex-api-key');
-  var key = inp ? inp.value.trim() : '';
-  if (!key) { toast('Paste your FlashAlpha key first', 'r'); return; }
-  GEX_KEY = key;
-  localStorage.setItem('gex_api_key', key);
-  // Start auto-refresh if selected
-  startGexAutoRefresh();
-  fetchGEX();
-}
-
-function startGexAutoRefresh() {
-  if (GEX_INTERVAL_ID) clearInterval(GEX_INTERVAL_ID);
-  var sel = document.getElementById('gex-interval');
-  var secs = sel ? parseInt(sel.value) : 0;
-  if (secs > 0 && GEX_KEY) {
-    GEX_INTERVAL_ID = setInterval(fetchGEX, secs * 1000);
-  }
-}
-
-function toggleGexAdvanced() {
-  GEX_ADVANCED_OPEN = !GEX_ADVANCED_OPEN;
-  var el = document.getElementById('gex-advanced');
-  var btn = document.getElementById('gex-adv-btn');
-  if (el) el.style.display = GEX_ADVANCED_OPEN ? 'block' : 'none';
-  if (btn) btn.textContent = GEX_ADVANCED_OPEN ? 'Hide advanced' : 'Show advanced';
-  if (GEX_ADVANCED_OPEN && GEX_DATA) populateAdvanced(GEX_DATA);
-}
-
-function setGexStatus(state, msg) {
-  var dot = document.getElementById('gex-dot');
-  var txt = document.getElementById('gex-status-txt');
-  var colors = { ok: 'var(--green)', error: 'var(--red)', loading: 'var(--amber)', idle: 'var(--border2)' };
-  if (dot) dot.style.background = colors[state] || colors.idle;
-  if (txt) txt.textContent = msg || state;
-}
-
-function showGexError(title, msg) {
-  var banner = document.getElementById('gex-error-banner');
-  var t = document.getElementById('gex-error-title');
-  var m = document.getElementById('gex-error-msg');
-  if (banner) banner.style.display = 'block';
-  if (t) t.textContent = title;
-  if (m) m.textContent = msg;
-  document.getElementById('gex-data-area').style.display = 'none';
-  document.getElementById('gex-empty-state').style.display = 'block';
-  setGexStatus('error', 'Error');
-}
-
-function hideGexError() {
-  var banner = document.getElementById('gex-error-banner');
-  if (banner) banner.style.display = 'none';
-}
-
-async function fetchGEX() {
-  if (!GEX_KEY) { toast('Enter your API key and click Connect first', 'r'); return; }
-  var btn = document.getElementById('gex-refresh-btn');
-  if (btn) { btn.textContent = 'Loading…'; btn.disabled = true; }
-  setGexStatus('loading', 'Loading…');
-  hideGexError();
-
-  try {
-    // FlashAlpha endpoint — GET /gex?symbol=SPY
-    var targetUrl = FA_BASE + '/gex?symbol=' + encodeURIComponent(GEX_SYM) + '&apikey=' + encodeURIComponent(GEX_KEY);
-    var proxyUrl = CORS_PROXY + encodeURIComponent(targetUrl);
-
-    var res = await fetch(proxyUrl, { headers: { 'Accept': 'application/json' } });
-
-    if (!res.ok) {
-      throw new Error('HTTP ' + res.status);
-    }
-
-    var raw = await res.text();
-    var data;
-    try { data = JSON.parse(raw); } catch(e) { throw new Error('Response was not valid JSON. The API may be down or your key is wrong.'); }
-
-    // Handle FlashAlpha error responses
-    if (data.error || data.message) {
-      var errMsg = data.error || data.message || 'Unknown error';
-      if (errMsg.toLowerCase().includes('invalid') || errMsg.toLowerCase().includes('unauthorized') || errMsg.toLowerCase().includes('api key')) {
-        showGexError('Invalid API key.', 'Check your FlashAlpha key at flashalpha.com — make sure you copied the full key with no spaces.');
-      } else {
-        showGexError('API Error:', errMsg);
-      }
-      return;
-    }
-
-    GEX_DATA = data;
-    renderGEX(data);
-    setGexStatus('ok', 'Live · ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
-
-  } catch(e) {
-    var msg = e.message || 'Unknown error';
-    if (msg.includes('401') || msg.includes('403') || msg.includes('invalid') || msg.includes('key')) {
-      showGexError('Invalid API key.', 'Check your FlashAlpha key at flashalpha.com — make sure you copied the full key with no spaces.');
-    } else if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('CORS')) {
-      showGexError('Connection failed.', 'Could not reach FlashAlpha. Check your internet connection. If this keeps happening, FlashAlpha\'s free tier may block browser requests — try their official app or upgrade your plan.');
-    } else {
-      showGexError('Could not load data.', msg);
-    }
-    setGexStatus('error', 'Error');
-  } finally {
-    if (btn) { btn.textContent = 'Refresh'; btn.disabled = false; }
-  }
-}
-
-function renderGEX(d) {
-  hideGexError();
-  document.getElementById('gex-data-area').style.display = 'block';
-  document.getElementById('gex-empty-state').style.display = 'none';
-
-  // ── Normalise data ──
-  // FlashAlpha returns different shapes depending on endpoint version
-  // We handle both flat and nested formats
-  var netGex = d.netGex || d.net_gex || d.gex || d.totalGex || 0;
-  var gammaFlip = d.gammaFlip || d.gamma_flip || d.flipLevel || d.flip_level || 0;
-  var callWall = d.callWall || d.call_wall || 0;
-  var putWall = d.putWall || d.put_wall || 0;
-  var hvl = d.hvl || d.highVolLevel || d.high_vol_level || 0;
-  var currentPrice = d.spotPrice || d.spot_price || d.underlyingPrice || d.underlying_price || d.price || 0;
-  var levels = d.levels || d.gexLevels || d.keyLevels || [];
-
-  // ── Determine Bias ──
-  var isAboveFlip = currentPrice > gammaFlip;
-  var netBillion = (parseFloat(netGex) / 1e9).toFixed(2);
-  var isPositive = parseFloat(netGex) >= 0;
-  var distToFlip = gammaFlip ? Math.abs(currentPrice - gammaFlip).toFixed(2) : null;
-
-  // ── Bias card ──
-  var biasCard = document.getElementById('gex-bias-card');
-  var headline = document.getElementById('gex-bias-headline');
-  var biasSubEl = document.getElementById('gex-bias-sub');
-  var netEl = document.getElementById('gex-net-value');
-  var symLbl = document.getElementById('gex-sym-label');
-  if (symLbl) symLbl.textContent = GEX_SYM + ' — Market Bias';
-
-  if (isAboveFlip && isPositive) {
-    if (biasCard) biasCard.style.cssText = 'border-radius:10px;padding:18px 22px;margin-bottom:14px;border:1px solid var(--gbr);background:var(--gbg)';
-    if (headline) { headline.textContent = 'Bullish — Dealers Supporting'; headline.style.color = 'var(--green)'; }
-    if (biasSubEl) { biasSubEl.textContent = 'Above gamma flip. Dealers buy dips — cushion under the market.'; biasSubEl.style.color = 'var(--green)'; }
-    if (netEl) { netEl.textContent = '+' + netBillion; netEl.style.color = 'var(--green)'; }
-  } else if (!isAboveFlip && !isPositive) {
-    if (biasCard) biasCard.style.cssText = 'border-radius:10px;padding:18px 22px;margin-bottom:14px;border:1px solid var(--rbr);background:var(--rbg)';
-    if (headline) { headline.textContent = 'Bearish — Dealers Selling'; headline.style.color = 'var(--red)'; }
-    if (biasSubEl) { biasSubEl.textContent = 'Below gamma flip. Dealers sell rallies — pressure on the market.'; biasSubEl.style.color = 'var(--red)'; }
-    if (netEl) { netEl.textContent = netBillion; netEl.style.color = 'var(--red)'; }
-  } else {
-    if (biasCard) biasCard.style.cssText = 'border-radius:10px;padding:18px 22px;margin-bottom:14px;border:1px solid var(--abr);background:var(--abg)';
-    if (headline) { headline.textContent = 'Neutral — Watch the Flip'; headline.style.color = 'var(--amber)'; }
-    if (biasSubEl) { biasSubEl.textContent = 'Near the gamma flip. Direction could change rapidly.'; biasSubEl.style.color = 'var(--amber)'; }
-    if (netEl) { netEl.textContent = (isPositive ? '+' : '') + netBillion; netEl.style.color = 'var(--amber)'; }
-  }
-
-  // ── Key Levels ──
-  // Build resistance + support arrays from API data
-  var resistanceLevels = [];
-  var supportLevels = [];
-
-  // Add call wall / put wall explicitly
-  if (callWall) resistanceLevels.push({ price: callWall, label: 'Call Wall', desc: 'Largest call concentration — strong ceiling', color: 'red' });
-  if (putWall) supportLevels.push({ price: putWall, label: 'Put Wall', desc: 'Largest put concentration — strong floor', color: 'green' });
-
-  // Parse levels array if provided
-  if (Array.isArray(levels)) {
-    levels.forEach(function(lv) {
-      var p = lv.strike || lv.price || lv.level;
-      var g = lv.gex || lv.totalGex || lv.gammaExposure || 0;
-      var type = lv.type || (g > 0 ? 'positive' : 'negative');
-      if (!p) return;
-      if (parseFloat(p) > parseFloat(gammaFlip || currentPrice)) {
-        if (resistanceLevels.length < 4)
-          resistanceLevels.push({ price: p, label: g > 0 ? 'High GEX' : 'GEX Level', desc: 'Dealers will ' + (g > 0 ? 'sell here to hedge' : 'hedge here'), color: 'red' });
-      } else {
-        if (supportLevels.length < 4)
-          supportLevels.push({ price: p, label: g < 0 ? 'High GEX' : 'GEX Level', desc: 'Dealers will ' + (g < 0 ? 'buy here to hedge' : 'hedge here'), color: 'green' });
-      }
-    });
-  }
-
-  renderLevelList('gex-resistance-list', resistanceLevels, 'red');
-  renderLevelList('gex-support-list', supportLevels, 'green');
-
-  // ── Flip level ──
-  var flipEl = document.getElementById('gex-flip-price');
-  if (flipEl) flipEl.textContent = gammaFlip || '–';
-
-  // ── Plain English Summary ──
-  var summaryEl = document.getElementById('gex-summary');
-  if (summaryEl && gammaFlip && currentPrice) {
-    var posStr = isAboveFlip
-      ? GEX_SYM + ' is <strong>above the gamma flip at ' + gammaFlip + '</strong>. Dealers are net-long gamma — they buy dips and sell rips automatically. Think of it as a giant shock absorber.'
-      : GEX_SYM + ' is <strong>below the gamma flip at ' + gammaFlip + '</strong>. Dealers are net-short gamma — they amplify moves by buying when it goes up and selling when it goes down.';
-    var ceilStr = callWall ? 'Nearest ceiling is the <strong>call wall at ' + callWall + '</strong>. Dealers sell into any rally there — expect resistance.' : '';
-    var floorStr = putWall ? 'Nearest floor is the <strong>put wall at ' + putWall + '</strong>. Dealers buy any dip there — expect support.' : '';
-    var warnStr = distToFlip && parseFloat(distToFlip) < 5 ? '<br/><strong>Warning:</strong> Only ' + distToFlip + ' points from the flip. A break ' + (isAboveFlip ? 'below ' : 'above ') + gammaFlip + ' changes everything — moves would accelerate sharply.' : '';
-    summaryEl.innerHTML = posStr + ' ' + ceilStr + ' ' + floorStr + warnStr;
-  } else if (summaryEl) {
-    summaryEl.innerHTML = 'Data loaded. Key levels shown — check the breakdown on the left.';
-  }
-
-  // ── Trade Implications ──
-  var implEl = document.getElementById('gex-trade-implication');
-  if (implEl) {
-    var impls = [];
-    if (isAboveFlip) {
-      impls.push({ col: 'green', txt: 'Dips are likely to be bought — look for long setups at support zones' });
-      if (callWall) impls.push({ col: 'red', txt: 'Rally toward ' + callWall + ' may stall — watch for short setups at the call wall' });
-    } else {
-      impls.push({ col: 'red', txt: 'Rallies are likely to be sold — look for short setups at resistance zones' });
-      if (putWall) impls.push({ col: 'green', txt: 'Drop toward ' + putWall + ' may find buyers — watch for long setups at the put wall' });
-    }
-    if (distToFlip && parseFloat(distToFlip) < 5) {
-      impls.push({ col: 'amber', txt: 'Very close to the gamma flip — be careful with direction. Volatility may spike.' });
-    }
-    implEl.innerHTML = impls.map(function(imp) {
-      var bg = imp.col === 'green' ? 'var(--gbg)' : imp.col === 'red' ? 'var(--rbg)' : 'var(--abg)';
-      var border = imp.col === 'green' ? 'var(--gbr)' : imp.col === 'red' ? 'var(--rbr)' : 'var(--abr)';
-      var col = imp.col === 'green' ? 'var(--green)' : imp.col === 'red' ? 'var(--red)' : 'var(--amber)';
-      var dot = imp.col === 'green' ? '▲' : imp.col === 'red' ? '▼' : '●';
-      return '<div style="display:flex;gap:9px;align-items:flex-start;padding:9px 12px;background:' + bg + ';border:1px solid ' + border + ';border-radius:7px">' +
-        '<span style="color:' + col + ';font-size:12px;margin-top:1px;flex-shrink:0">' + dot + '</span>' +
-        '<span style="font-size:12px;color:var(--text2);line-height:1.6">' + imp.txt + '</span>' +
-        '</div>';
-    }).join('');
-  }
-
-  // ── Advanced ──
-  if (GEX_ADVANCED_OPEN) populateAdvanced(d);
-
-  // ── Last updated ──
-  var lu = document.getElementById('gex-last-updated');
-  if (lu) lu.textContent = 'Last updated: ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function renderLevelList(elId, levels, colorType) {
-  var el = document.getElementById(elId);
-  if (!el) return;
-  if (!levels.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">No levels detected for this zone.</div>';
-    return;
-  }
-  var bg = colorType === 'red' ? 'var(--rbg)' : 'var(--gbg)';
-  var border = colorType === 'red' ? 'var(--rbr)' : 'var(--gbr)';
-  var col = colorType === 'red' ? 'var(--red)' : 'var(--green)';
-  el.innerHTML = levels.map(function(lv) {
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;background:' + bg + ';border:1px solid ' + border + '">' +
-      '<div>' +
-        '<div style="font-family:\'Fraunces\',serif;font-size:20px;color:var(--text)">' + lv.price + '</div>' +
-        '<div style="font-size:11px;color:var(--text3);margin-top:1px">' + (lv.desc || '') + '</div>' +
-      '</div>' +
-      '<span style="font-size:9px;font-weight:700;padding:3px 9px;border-radius:4px;background:' + bg + ';color:' + col + ';border:1px solid ' + border + '">' + (lv.label || '') + '</span>' +
-    '</div>';
-  }).join('');
-}
-
-function populateAdvanced(d) {
-  var callWall = d.callWall || d.call_wall || '–';
-  var putWall = d.putWall || d.put_wall || '–';
-  var hvl = d.hvl || d.highVolLevel || d.high_vol_level || '–';
-  var zeroGamma = d.zeroGamma || d.zero_gamma || d.gammaFlip || d.gamma_flip || '–';
-  var netGex = d.netGex || d.net_gex || d.gex || 0;
-  var currentPrice = d.spotPrice || d.spot_price || d.underlyingPrice || 0;
-  var gammaFlip = d.gammaFlip || d.gamma_flip || 0;
-  var dist = gammaFlip && currentPrice ? Math.abs(currentPrice - gammaFlip).toFixed(2) : '–';
-  var isPos = parseFloat(netGex) >= 0;
-
-  function sv(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
-  sv('adv-call-wall', callWall);
-  sv('adv-put-wall', putWall);
-  sv('adv-hvl', hvl);
-  sv('adv-zero-gamma', zeroGamma);
-  sv('adv-dist-flip', dist !== '–' ? dist + ' pts' : '–');
-
-  var regEl = document.getElementById('adv-regime');
-  if (regEl) {
-    regEl.textContent = isPos ? 'Positive GEX' : 'Negative GEX';
-    regEl.style.color = isPos ? 'var(--green)' : 'var(--red)';
-  }
-}
-
-function initGexPage() {
-  // Restore saved API key if any
-  var saved = localStorage.getItem('gex_api_key');
+function gexInit() {
+  // Restore saved key if user has connected before
+  var saved = localStorage.getItem('fa_key');
   if (saved) {
     var inp = document.getElementById('gex-api-key');
     if (inp) inp.value = saved;
     GEX_KEY = saved;
   }
-  // Set default symbol button active
-  setGexSym(GEX_SYM);
+  gexSetSym(GEX_SYM);
+}
+
+function gexSetSym(sym) {
+  if (!sym || !sym.length) return;
+  GEX_SYM = sym.toUpperCase();
+  // Update symbol button highlights
+  ['SPY','QQQ','ES','NQ'].forEach(function(s) {
+    var btn = document.getElementById('gsym-' + s);
+    if (btn) { btn.classList.toggle('sel', s === GEX_SYM); }
+  });
+  var lbl = document.getElementById('gex-sym-label');
+  if (lbl) lbl.textContent = GEX_SYM + ' — Market Bias';
+  // If already connected, auto-reload
+  if (GEX_KEY) fetchGEX();
+}
+
+function gexConnect() {
+  var inp = document.getElementById('gex-api-key');
+  var key = inp ? inp.value.trim() : '';
+  if (!key) { toast('Paste your FlashAlpha key first', 'r'); return; }
+  GEX_KEY = key;
+  localStorage.setItem('fa_key', key);
+  gexStartAutoRefresh();
+  fetchGEX();
+}
+
+function gexStartAutoRefresh() {
+  if (GEX_TIMER) clearInterval(GEX_TIMER);
+  var sel = document.getElementById('gex-interval');
+  var secs = sel ? parseInt(sel.value) : 0;
+  if (secs > 0 && GEX_KEY) {
+    GEX_TIMER = setInterval(fetchGEX, secs * 1000);
+  }
+}
+
+function gexToggleAdv() {
+  GEX_ADV = !GEX_ADV;
+  var el = document.getElementById('gex-adv');
+  var btn = document.getElementById('gex-adv-btn');
+  if (el) el.style.display = GEX_ADV ? 'block' : 'none';
+  if (btn) btn.textContent = GEX_ADV ? 'Hide advanced' : 'Show advanced';
+  if (GEX_ADV && GEX_DATA) gexPopAdv(GEX_DATA);
+}
+
+function gexSetStatus(state, msg) {
+  var dot = document.getElementById('gex-dot');
+  var txt = document.getElementById('gex-status-txt');
+  var c = { ok:'var(--green)', err:'var(--red)', loading:'var(--amber)', idle:'var(--border2)' };
+  if (dot) dot.style.background = c[state] || c.idle;
+  if (txt) txt.textContent = msg;
+}
+
+function gexShowErr(title, msg) {
+  var b = document.getElementById('gex-err');
+  var t = document.getElementById('gex-err-title');
+  var m = document.getElementById('gex-err-msg');
+  if (b) b.style.display = 'block';
+  if (t) t.textContent = title;
+  if (m) m.textContent = msg;
+  document.getElementById('gex-data').style.display = 'none';
+  document.getElementById('gex-empty').style.display = 'block';
+  gexSetStatus('err', 'Error');
+}
+
+function gexHideErr() {
+  var b = document.getElementById('gex-err');
+  if (b) b.style.display = 'none';
+}
+
+async function fetchGEX() {
+  if (!GEX_KEY) { toast('Enter your FlashAlpha key and click Connect first', 'r'); return; }
+
+  var btn = document.getElementById('gex-refresh-btn');
+  if (btn) { btn.textContent = 'Loading…'; btn.disabled = true; }
+  gexSetStatus('loading', 'Loading…');
+  gexHideErr();
+
+  // ── CORRECT URL: lab.flashalpha.com/v1/exposure/gex/{SYMBOL} ──
+  var url = 'https://lab.flashalpha.com/v1/exposure/gex/' + encodeURIComponent(GEX_SYM);
+
+  try {
+    var res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        // ── CORRECT HEADER: X-Api-Key (not apikey, not Authorization) ──
+        'X-Api-Key': GEX_KEY,
+        'Accept': 'application/json'
+      }
+    });
+
+    var data;
+    try { data = await res.json(); } catch(e) { throw new Error('API returned non-JSON. Check your key and try again.'); }
+
+    // Handle specific HTTP status codes
+    if (res.status === 401 || res.status === 403) {
+      var detail = (data && (data.detail || data.message || data.error)) || '';
+      if (detail.toLowerCase().includes('tier') || detail.toLowerCase().includes('plan') || res.status === 403) {
+        gexShowErr('Plan required.', 'This endpoint needs a paid FlashAlpha plan. Your free key has access but may be rate-limited. Detail: ' + (detail || 'Forbidden'));
+      } else {
+        gexShowErr('Invalid API key.', 'Check your key at flashalpha.com — make sure it is copied in full with no spaces. Detail: ' + (detail || 'Unauthorized'));
+      }
+      return;
+    }
+
+    if (res.status === 429) {
+      var retry = res.headers.get('Retry-After') || '86400';
+      gexShowErr('Rate limit hit.', 'Free tier allows 5 requests/day. You\'ve used them all. Try again tomorrow, or upgrade at flashalpha.com. Retry after: ' + retry + 's');
+      return;
+    }
+
+    if (res.status === 404) {
+      gexShowErr('Symbol not found.', '"' + GEX_SYM + '" is not supported by FlashAlpha. Try SPY or QQQ instead.');
+      return;
+    }
+
+    if (!res.ok) {
+      var det = (data && (data.detail || data.message || data.error)) || ('HTTP ' + res.status);
+      gexShowErr('API error.', det);
+      return;
+    }
+
+    // Success
+    GEX_DATA = data;
+    gexRender(data);
+    gexSetStatus('ok', 'Live · ' + new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }));
+
+  } catch(e) {
+    var msg = e.message || '';
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch') || msg.includes('CORS')) {
+      gexShowErr(
+        'Connection failed.',
+        'Could not reach FlashAlpha. Most likely cause: your browser is blocking the request (CORS). ' +
+        'Fix: try Chrome with no extensions, or disable uBlock/AdBlock. ' +
+        'If you are on Firefox, go to about:config and set security.mixed_content.block_active_content = false.'
+      );
+    } else {
+      gexShowErr('Error.', msg || 'Unknown error. Check your internet connection.');
+    }
+    gexSetStatus('err', 'Error');
+  } finally {
+    if (btn) { btn.textContent = 'Refresh'; btn.disabled = false; }
+  }
+}
+
+function gexRender(d) {
+  gexHideErr();
+  document.getElementById('gex-data').style.display = 'block';
+  document.getElementById('gex-empty').style.display = 'none';
+
+  // ── Parse FlashAlpha response fields (correct snake_case names) ──
+  var netGex = d.net_gex || 0;
+  var flip = d.gamma_flip || 0;
+  var regime = d.net_gex_label || (netGex >= 0 ? 'positive' : 'negative');
+  var spot = d.underlying_price || d.spot_price || d.price || 0;
+  var callWall = (d.call_wall && d.call_wall.strike) ? d.call_wall.strike : (d.call_wall || 0);
+  var putWall = (d.put_wall && d.put_wall.strike) ? d.put_wall.strike : (d.put_wall || 0);
+  var strikes = d.strikes || [];
+  var updatedAt = d.as_of || d.updated_at || new Date().toISOString();
+
+  var isAbove = spot && flip ? spot > flip : regime === 'positive';
+  var isPos = regime === 'positive' || netGex >= 0;
+  var netB = (Math.abs(parseFloat(netGex)) / 1e9).toFixed(2);
+  var sign = netGex >= 0 ? '+' : '-';
+  var dist = (spot && flip) ? Math.abs(spot - flip).toFixed(2) : null;
+
+  // ── Bias card ──
+  var bc = document.getElementById('gex-bias-card');
+  var bh = document.getElementById('gex-bias-headline');
+  var bs = document.getElementById('gex-bias-sub');
+  var nv = document.getElementById('gex-net-val');
+
+  if (isAbove && isPos) {
+    if (bc) bc.style.cssText = 'border-radius:10px;padding:18px 22px;margin-bottom:14px;border:1px solid var(--gbr);background:var(--gbg)';
+    if (bh) { bh.textContent = 'Bullish — Dealers Supporting'; bh.style.color = 'var(--green)'; }
+    if (bs) { bs.textContent = 'Above gamma flip. Dealers buy dips — cushion under the market.'; bs.style.color = 'var(--green)'; }
+    if (nv) { nv.textContent = '+' + netB; nv.style.color = 'var(--green)'; }
+  } else if (!isAbove && !isPos) {
+    if (bc) bc.style.cssText = 'border-radius:10px;padding:18px 22px;margin-bottom:14px;border:1px solid var(--rbr);background:var(--rbg)';
+    if (bh) { bh.textContent = 'Bearish — Dealers Selling'; bh.style.color = 'var(--red)'; }
+    if (bs) { bs.textContent = 'Below gamma flip. Dealers sell rallies — pressure on the market.'; bs.style.color = 'var(--red)'; }
+    if (nv) { nv.textContent = '-' + netB; nv.style.color = 'var(--red)'; }
+  } else {
+    if (bc) bc.style.cssText = 'border-radius:10px;padding:18px 22px;margin-bottom:14px;border:1px solid var(--abr);background:var(--abg)';
+    if (bh) { bh.textContent = 'Neutral — Near the Flip'; bh.style.color = 'var(--amber)'; }
+    if (bs) { bs.textContent = 'Close to the gamma flip. Direction could shift sharply.'; bs.style.color = 'var(--amber)'; }
+    if (nv) { nv.textContent = sign + netB; nv.style.color = 'var(--amber)'; }
+  }
+
+  var sl = document.getElementById('gex-sym-label');
+  if (sl) sl.textContent = GEX_SYM + ' — Market Bias';
+
+  // ── Build key levels from strikes array ──
+  // Sort strikes by absolute GEX descending to find the most important ones
+  var above = [], below = [];
+  strikes.forEach(function(s) {
+    var p = parseFloat(s.strike);
+    var g = s.net_gex || s.gex || 0;
+    if (!p) return;
+    if (flip ? p > flip : p > spot) {
+      above.push({ price: p, gex: g });
+    } else {
+      below.push({ price: p, gex: g });
+    }
+  });
+
+  // Sort resistance by absolute gex desc, support same
+  above.sort(function(a,b) { return Math.abs(b.gex) - Math.abs(a.gex); });
+  below.sort(function(a,b) { return Math.abs(b.gex) - Math.abs(a.gex); });
+
+  // Take top 3 each, add call/put walls if not already there
+  var resLevels = [];
+  if (callWall) resLevels.push({ price: callWall, label: 'Call Wall', desc: 'Largest call concentration — strong ceiling' });
+  above.slice(0, callWall ? 2 : 3).forEach(function(s) {
+    if (Math.abs(s.price - (callWall||0)) > 0.5) {
+      resLevels.push({ price: s.price, label: s.gex > 0 ? 'High GEX' : 'GEX Level', desc: 'Dealers hedge here — expect reaction' });
+    }
+  });
+
+  var supLevels = [];
+  if (putWall) supLevels.push({ price: putWall, label: 'Put Wall', desc: 'Largest put concentration — strong floor' });
+  below.slice(0, putWall ? 2 : 3).forEach(function(s) {
+    if (Math.abs(s.price - (putWall||0)) > 0.5) {
+      supLevels.push({ price: s.price, label: s.gex < 0 ? 'High GEX' : 'GEX Level', desc: 'Dealers hedge here — expect reaction' });
+    }
+  });
+
+  gexRenderLevels('gex-res-list', resLevels.slice(0,3), 'red');
+  gexRenderLevels('gex-sup-list', supLevels.slice(0,3), 'green');
+
+  // ── Flip level ──
+  var fp = document.getElementById('gex-flip-price');
+  if (fp) fp.textContent = flip || '–';
+
+  // ── Plain English Summary ──
+  var sumEl = document.getElementById('gex-summary');
+  if (sumEl) {
+    var lines = [];
+    if (spot && flip) {
+      lines.push(GEX_SYM + ' is ' + (isAbove
+        ? '<strong>above the gamma flip at ' + flip + '</strong>. Dealers are net-long gamma — they buy dips and sell rips automatically. Think of it as a giant shock absorber.'
+        : '<strong>below the gamma flip at ' + flip + '</strong>. Dealers are net-short gamma — they amplify moves. Expect faster, bigger price swings.'));
+    }
+    if (callWall) lines.push('Nearest ceiling is the <strong>call wall at ' + callWall + '</strong>. Dealers sell into any rally there — expect resistance.');
+    if (putWall) lines.push('Nearest floor is the <strong>put wall at ' + putWall + '</strong>. Dealers buy any dip there — expect support.');
+    if (dist && parseFloat(dist) < 5) {
+      lines.push('<strong>⚠ Warning:</strong> Only ' + dist + ' pts from the flip. A break ' + (isAbove ? 'below ' : 'above ') + flip + ' changes everything — moves could accelerate sharply.');
+    }
+    sumEl.innerHTML = lines.join('<br/><br/>') || 'GEX data loaded. See key levels on the left.';
+  }
+
+  // ── Trade implications ──
+  var implEl = document.getElementById('gex-implications');
+  if (implEl) {
+    var impls = [];
+    if (isAbove) {
+      impls.push({ col:'green', txt: 'Dips are likely to be bought — look for long setups at support zones.' });
+      if (callWall) impls.push({ col:'red', txt: 'Rally toward ' + callWall + ' may stall — watch for short setups at the call wall.' });
+    } else {
+      impls.push({ col:'red', txt: 'Rallies are likely to be sold — look for short setups at resistance zones.' });
+      if (putWall) impls.push({ col:'green', txt: 'Drop toward ' + putWall + ' may find buyers — watch for long setups at the put wall.' });
+    }
+    if (dist && parseFloat(dist) < 5) {
+      impls.push({ col:'amber', txt: 'Very close to gamma flip — be careful with direction. Volatility spike risk.' });
+    }
+    implEl.innerHTML = impls.map(function(i) {
+      var bg = i.col==='green'?'var(--gbg)':i.col==='red'?'var(--rbg)':'var(--abg)';
+      var br = i.col==='green'?'var(--gbr)':i.col==='red'?'var(--rbr)':'var(--abr)';
+      var col = i.col==='green'?'var(--green)':i.col==='red'?'var(--red)':'var(--amber)';
+      var arrow = i.col==='green'?'▲':i.col==='red'?'▼':'●';
+      return '<div style="display:flex;gap:9px;align-items:flex-start;padding:9px 12px;background:'+bg+';border:1px solid '+br+';border-radius:7px">' +
+        '<span style="color:'+col+';font-size:12px;flex-shrink:0;margin-top:1px">'+arrow+'</span>' +
+        '<span style="font-size:12px;color:var(--text2);line-height:1.6">'+i.txt+'</span></div>';
+    }).join('');
+  }
+
+  // ── Advanced ──
+  if (GEX_ADV) gexPopAdv(d);
+
+  // ── Last updated ──
+  var lu = document.getElementById('gex-updated');
+  if (lu) {
+    var dt = new Date(updatedAt);
+    lu.textContent = 'Last updated: ' + (isNaN(dt) ? updatedAt : dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' }));
+  }
+}
+
+function gexRenderLevels(elId, levels, color) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  if (!levels.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:6px 0">No significant levels in this zone.</div>';
+    return;
+  }
+  var bg = color==='red'?'var(--rbg)':'var(--gbg)';
+  var br = color==='red'?'var(--rbr)':'var(--gbr)';
+  var col = color==='red'?'var(--red)':'var(--green)';
+  el.innerHTML = levels.map(function(lv) {
+    return '<div class="gex-lv" style="background:'+bg+';border-color:'+br+'">' +
+      '<div><div class="gex-lv-price">'+lv.price+'</div><div class="gex-lv-desc">'+lv.desc+'</div></div>' +
+      '<span class="gex-lv-tag" style="background:'+bg+';color:'+col+';border:1px solid '+br+'">'+lv.label+'</span>' +
+    '</div>';
+  }).join('');
+}
+
+function gexPopAdv(d) {
+  function sv(id, val) { var el=document.getElementById(id); if(el)el.textContent=val||'–'; }
+  var cw = (d.call_wall && d.call_wall.strike) ? d.call_wall.strike : (d.call_wall || '–');
+  var pw = (d.put_wall && d.put_wall.strike) ? d.put_wall.strike : (d.put_wall || '–');
+  sv('adv-cwall', cw);
+  sv('adv-pwall', pw);
+  sv('adv-flip', d.gamma_flip || '–');
+  sv('adv-price', d.underlying_price || d.spot_price || '–');
+  var net = d.net_gex || 0;
+  var spot = d.underlying_price || 0;
+  var flip = d.gamma_flip || 0;
+  var dist = (spot && flip) ? Math.abs(spot - flip).toFixed(2) + ' pts' : '–';
+  sv('adv-dist', dist);
+  var regEl = document.getElementById('adv-regime');
+  var lbl = d.net_gex_label || (net >= 0 ? 'positive' : 'negative');
+  if (regEl) {
+    regEl.textContent = lbl === 'positive' ? 'Positive GEX' : 'Negative GEX';
+    regEl.style.color = lbl === 'positive' ? 'var(--green)' : 'var(--red)';
+  }
 }
 
 
 async function init() {
   setTodayDate();
-  initGexPage();
   await Promise.all([
     loadFromSupabase('enz'),
     loadFromSupabase('abd'),
